@@ -23,20 +23,21 @@ app.use(express.json());
 const tokens: string[] = [];
 
 // Registrar token
-app.post("/register", (req: Request, res: Response) => {
+app.post("/register", async (req: Request, res: Response) => {
   const { token } = req.body as { token: string };
 
   if (!token) {
     return res.status(400).json({ error: "Token requerido" });
   }
 
-  if (!tokens.includes(token)) {
-    tokens.push(token);
+  try {
+    await admin.messaging().subscribeToTopic(token, "global");
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Error suscribiendo al topic" });
   }
-
-  console.log("Tokens registrados:", tokens);
-
-  return res.json({ success: true });
 });
 
 // Enviar notificación a TODOS
@@ -55,15 +56,13 @@ app.post("/send-all", async (req: Request, res: Response) => {
   }
 
   try {
-    const response = await admin.messaging().sendEachForMulticast({
+    const response = await admin.messaging().send({
       notification: {
         title,
         body,
       },
-      tokens,
+      topic: "global",
     });
-
-    console.log("Resultado envío:", response);
 
     return res.json({ success: true, response });
   } catch (error) {
