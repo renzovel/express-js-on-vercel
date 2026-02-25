@@ -33,7 +33,7 @@ app.post("/register", async (req: Request, res: Response) => {
   try {
     await admin.messaging().subscribeToTopic(token, "global");
 
-    return res.json({ success: true });
+    return res.json({ success: true, token });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Error suscribiendo al topic" });
