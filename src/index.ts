@@ -33,7 +33,7 @@ app.post("/register", async (req: Request, res: Response) => {
   try {
     await admin.messaging().subscribeToTopic(token, "global");
 
-    return res.json({ success: true, token });
+    return res.json({ success: true });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Error suscribiendo al topic" });
@@ -49,10 +49,6 @@ app.post("/send-all", async (req: Request, res: Response) => {
 
   if (!title || !body) {
     return res.status(400).json({ error: "Title y body requeridos" });
-  }
-
-  if (tokens.length === 0) {
-    return res.status(400).json({ error: "No hay dispositivos registrados" });
   }
 
   try {
