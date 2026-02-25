@@ -2,23 +2,19 @@ import express, { Request, Response } from 'express'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import admin from "firebase-admin";
-import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const serviceAccountPath = path.join(
-  __dirname,
-  "../financeiro-382320-firebase-adminsdk-dqnmu-1b5429b40d.json"
-);
-
-const serviceAccount = JSON.parse(
-  fs.readFileSync(serviceAccountPath, "utf-8")
-);
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
-});
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: process.env.FB_PROJECT_ID,
+      clientEmail: process.env.FB_CLIENT_EMAIL,
+      privateKey: process.env.FB_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+    }),
+  });
+}
 
 const app = express()
 app.use(express.json());
