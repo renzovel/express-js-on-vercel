@@ -31,7 +31,9 @@ app.post("/register", async (req: Request, res: Response) => {
   }
 
   try {
-    await admin.messaging().subscribeToTopic(token, "global");
+    const topic = await admin.messaging().subscribeToTopic(token, "global");
+
+    console.log(`Token ${token} suscrito al topic 'global'`, topic);
 
     return res.json({ success: true });
   } catch (error) {
