@@ -74,8 +74,8 @@ app.post("/upload", upload.single("file"), async (req: Request, res: Response) =
         ContentType: file.mimetype,
       }),
     );
-    console.log("Archivo subido a R2:", response);
-    return res.json({ success: true, key , publicUrl: `https://pub-28158015a1b84668815dbc6df48fc608.r2.dev/images/${key}/` });
+    console.log("Archivo subido a R2:", `https://pub-28158015a1b84668815dbc6df48fc608.r2.dev/${key}`);
+    return res.json({ success: true, key , publicUrl: `https://pub-28158015a1b84668815dbc6df48fc608.r2.dev/${key}` });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Error subiendo el archivo" });
