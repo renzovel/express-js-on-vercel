@@ -63,14 +63,15 @@ app.post("/register", async (req: Request, res: Response) => {
 });
 
 app.post("/upload", upload.single("file"), async (req: Request, res: Response) => {
-  const key = `images/${Date.now()}-${req.file.originalname}`;
+  const file = req.file as Express.Multer.File;
+  const key = `images/${Date.now()}-${file.originalname}`;
   try {
     const response= await s3.send(
       new PutObjectCommand({
         Bucket: "vercel",
         Key: key,
-        Body: req.file.buffer,
-        ContentType: req.file.mimetype,
+        Body: file.buffer,
+        ContentType: file.mimetype,
       }),
     );
     console.log("Archivo subido a R2:", response);
