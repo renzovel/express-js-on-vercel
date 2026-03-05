@@ -73,7 +73,7 @@ app.post("/upload-and-send", upload.single("file"), async (req: Request, res: Re
     if (!title || !body) {
       return res.status(400).json({success: false, error: "Title y body requeridos" });
     }
-    const key = `images/${Date.now()}-${uuidv4()}-${path.extname(file.originalname)}`;
+    const key = `images/${Date.now()}-${uuidv4()}${path.extname(file.originalname)}`;
     await s3.send(
       new PutObjectCommand({
         Bucket: "vercel",
