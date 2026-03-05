@@ -2,6 +2,15 @@ import express, { Request, Response } from 'express'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import admin from "firebase-admin";
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  ListObjectsV2Command,
+} from "@aws-sdk/client-s3";
+import multer from 'multer';
+
+const upload = multer();
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -15,6 +24,17 @@ if (!admin.apps.length) {
     }),
   });
 }
+
+const s3 = new S3Client({
+  region: "auto", // Required by AWS SDK, not used by R2
+  // Provide your R2 endpoint: https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+  endpoint: "https://7b5715952bf4840de4e3254fce132177.r2.cloudflarestorage.com",
+  credentials: {
+    // Provide your R2 Access Key ID and Secret Access Key
+    accessKeyId: "129f2a02aee73f74f85828f24210ddd3",
+    secretAccessKey: "167d9cee252e7ea914a9df0226e0c4fd8f86945f00b913adbfd258b37a82f271",
+  },
+});
 
 const app = express()
 app.use(express.json());
@@ -40,6 +60,25 @@ app.post("/register", async (req: Request, res: Response) => {
     console.error(error);
     return res.status(500).json({ error: "Error suscribiendo al topic" });
   }
+});
+
+app.post("/upload", upload.single("file"), async (req: Request, res: Response) => {
+  const key = `images/${Date.now()}-${req.file.originalname}`;
+  try {
+    const response= await s3.send(
+      new PutObjectCommand({
+        Bucket: "vercel",
+        Key: key,
+        Body: req.file.buffer,
+        ContentType: req.file.mimetype,
+      }),
+    );
+    console.log("Archivo subido a R2:", response);
+    return res.json({ success: true, key , publicUrl: `https://pub-28158015a1b84668815dbc6df48fc608.r2.dev/images/${key}/` });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Error subiendo el archivo" });
+  }   
 });
 
 // Enviar notificación a TODOS
