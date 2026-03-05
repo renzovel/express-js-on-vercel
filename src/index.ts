@@ -62,11 +62,18 @@ app.post("/register", async (req: Request, res: Response) => {
   }
 });
 
-app.post("/upload", upload.single("file"), async (req: Request, res: Response) => {
-  const file = req.file as Express.Multer.File;
-  const key = `images/${Date.now()}-${file.originalname}`;
+app.post("/upload-and-send", upload.single("file"), async (req: Request, res: Response) => {
   try {
-    const response= await s3.send(
+    const file = req.file as Express.Multer.File;
+    const { title, body } = req.body as {
+      title: string;
+      body: string;
+    };
+    if (!title || !body) {
+      return res.status(400).json({success: false, error: "Title y body requeridos" });
+    }
+    const key = `images/${Date.now()}-${file.originalname}`;
+    await s3.send(
       new PutObjectCommand({
         Bucket: "vercel",
         Key: key,
@@ -74,11 +81,26 @@ app.post("/upload", upload.single("file"), async (req: Request, res: Response) =
         ContentType: file.mimetype,
       }),
     );
-    console.log("Archivo subido a R2:", `https://pub-28158015a1b84668815dbc6df48fc608.r2.dev/${key}`);
-    return res.json({ success: true, key , publicUrl: `https://pub-28158015a1b84668815dbc6df48fc608.r2.dev/${key}` });
+    const publicUrl = `https://pub-28158015a1b84668815dbc6df48fc608.r2.dev/${key}`;
+    console.log("Archivo subido a R2:", publicUrl);
+    const response = await admin.messaging().send({
+      notification: {
+        title,
+        body,
+        imageUrl: publicUrl,
+      },
+      data: {
+        title,
+        body,
+        imageUrl: publicUrl,
+      },
+      topic: "global",
+    });
+    console.log("Notificación enviada con imagen:", response);
+    return res.json({ success: true, key , publicUrl, response });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ error: "Error subiendo el archivo" });
+    return res.status(500).json({success: false, error: "Error subiendo el archivo", message: error.message.toString() });
   }   
 });
 
