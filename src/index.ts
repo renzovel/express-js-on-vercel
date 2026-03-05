@@ -9,6 +9,8 @@ import {
   ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
 import multer from 'multer';
+import { v4 as uuidv4 } from 'uuid';
+import path from "path";
 
 const upload = multer();
 
@@ -72,7 +74,7 @@ app.post("/upload-and-send", upload.single("file"), async (req: Request, res: Re
     if (!title || !body) {
       return res.status(400).json({success: false, error: "Title y body requeridos" });
     }
-    const key = `images/${Date.now()}-${file.originalname}`;
+    const key = `images/${Date.now()}-${uuidv4()}-${path.extname(file.originalname)}`;
     await s3.send(
       new PutObjectCommand({
         Bucket: "vercel",
